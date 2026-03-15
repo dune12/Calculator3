@@ -119,7 +119,7 @@
 <script>
   // Service Worker 등록
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('sw.js', { scope: '/Calculator3/' });
   }
 
   // PWA 설치 배너
