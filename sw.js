@@ -1,8 +1,8 @@
 const CACHE = 'calculator-v1';
 const FILES = [
-  '/Calculator/',
-  '/Calculator/index.html',
-  '/Calculator/manifest.json'
+  '/Calculator3/',
+  '/Calculator3/index.html',
+  '/Calculator3/manifest.json'
 ];
 
 // 설치: 파일 캐시
