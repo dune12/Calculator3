@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6c4de6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="계산기">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>계산기</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f0f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  .calc {
+    background: #fff;
+    border-radius: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    padding: 24px;
+    width: 320px;
+  }
+  .display {
+    background: #f7f7f9;
+    border-radius: 16px;
+    padding: 20px 20px 14px;
+    margin-bottom: 20px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+  .expr { font-size: 13px; color: #aaa; min-height: 18px; word-break: break-all; text-align: right; margin-bottom: 6px; }
+  .main-num { font-size: 42px; font-weight: 300; color: #1a1a2e; word-break: break-all; text-align: right; line-height: 1.1; transition: font-size 0.1s; }
+  .history { margin-bottom: 16px; max-height: 90px; overflow-y: auto; }
+  .history::-webkit-scrollbar { width: 3px; }
+  .history::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
+  .history-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+  .history-item:hover { background: #f5f5f7; }
+  .history-expr { font-size: 11px; color: #bbb; }
+  .history-result { font-size: 13px; color: #666; font-weight: 500; }
+  .history-empty { font-size: 11px; color: #ddd; text-align: center; padding: 6px 0; }
+  .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  button { border: none; border-radius: 14px; font-size: 18px; font-weight: 400; cursor: pointer; height: 62px; transition: transform 0.08s, background 0.1s; outline: none; -webkit-tap-highlight-color: transparent; }
+  button:active { transform: scale(0.94); }
+  .btn-num { background: #f2f2f5; color: #1a1a2e; }
+  .btn-num:hover { background: #e8e8ee; }
+  .btn-op { background: #ede8fb; color: #6c4de6; font-size: 20px; }
+  .btn-op:hover { background: #e0d8f7; }
+  .btn-op.active { background: #6c4de6; color: #fff; }
+  .btn-eq { background: #6c4de6; color: #fff; font-size: 22px; grid-column: span 2; }
+  .btn-eq:hover { background: #5a3dd4; }
+  .btn-func { background: #f2f2f5; color: #888; font-size: 16px; }
+  .btn-func:hover { background: #e8e8ee; }
+
+  /* 설치 배너 */
+  #installBanner {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #6c4de6;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 16px;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(108,77,230,0.4);
+    cursor: pointer;
+    z-index: 999;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="main-num" id="mainNum">0</div>
+  </div>
+  <div class="history" id="history">
+    <div class="history-empty">히스토리가 없습니다</div>
+  </div>
+  <div class="buttons">
+    <button class="btn-func" onclick="ac()">AC</button>
+    <button class="btn-func" onclick="toggleSign()">+/−</button>
+    <button class="btn-func" onclick="percent()">%</button>
+    <button class="btn-op" id="op-/" onclick="setOp('/')">÷</button>
+    <button class="btn-num" onclick="inp('7')">7</button>
+    <button class="btn-num" onclick="inp('8')">8</button>
+    <button class="btn-num" onclick="inp('9')">9</button>
+    <button class="btn-op" id="op-*" onclick="setOp('*')">×</button>
+    <button class="btn-num" onclick="inp('4')">4</button>
+    <button class="btn-num" onclick="inp('5')">5</button>
+    <button class="btn-num" onclick="inp('6')">6</button>
+    <button class="btn-op" id="op--" onclick="setOp('-')">−</button>
+    <button class="btn-num" onclick="inp('1')">1</button>
+    <button class="btn-num" onclick="inp('2')">2</button>
+    <button class="btn-num" onclick="inp('3')">3</button>
+    <button class="btn-op" id="op-+" onclick="setOp('+')">+</button>
+    <button class="btn-func" style="font-size:20px" onclick="del()">⌫</button>
+    <button class="btn-num" onclick="inp('0')">0</button>
+    <button class="btn-num" onclick="dot()">.</button>
+    <button class="btn-eq" onclick="calc()">=</button>
+  </div>
+</div>
+<div id="installBanner" onclick="installApp()">📲 홈 화면에 앱 설치하기</div>
+
+<script>
+  // Service Worker 등록
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  // PWA 설치 배너
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').style.display = 'block';
+  });
+  function installApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        document.getElementById('installBanner').style.display = 'none';
+      });
+    }
+  }
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('installBanner').style.display = 'none';
+  });
+
+  // 계산기 로직
+  let cur = '0', prev = '', op = null, justCalc = false;
+  const history = [];
+  const $num = document.getElementById('mainNum');
+  const $expr = document.getElementById('expr');
+  const $hist = document.getElementById('history');
+
+  function updateDisplay() {
+    $num.textContent = format(cur);
+    const len = cur.length;
+    $num.style.fontSize = len > 14 ? '24px' : len > 10 ? '32px' : '42px';
+    clearOpHighlight();
+    if (op && !justCalc) document.getElementById('op-' + op)?.classList.add('active');
+  }
+  function clearOpHighlight() {
+    document.querySelectorAll('.btn-op').forEach(b => b.classList.remove('active'));
+  }
+  function format(n) {
+    if (n === '' || n === '-') return n || '0';
+    const parts = n.split('.');
+    const neg = parts[0].startsWith('-') ? '-' : '';
+    const int = parts[0].replace('-','');
+    const fmt = neg + parseInt(int || '0').toLocaleString('ko-KR');
+    return parts.length > 1 ? fmt + '.' + parts[1] : fmt;
+  }
+  function inp(d) {
+    if (justCalc) { cur = d; justCalc = false; }
+    else cur = cur === '0' ? d : cur + d;
+    if (cur.replace('-','').replace('.','').length > 15) cur = cur.slice(0,-1);
+    updateDisplay();
+  }
+  function dot() {
+    if (justCalc) { cur = '0.'; justCalc = false; updateDisplay(); return; }
+    if (!cur.includes('.')) cur += '.';
+    updateDisplay();
+  }
+  function del() {
+    if (justCalc) return;
+    cur = cur.length <= 1 ? '0' : cur.slice(0,-1);
+    updateDisplay();
+  }
+  function ac() {
+    cur='0'; prev=''; op=null; justCalc=false;
+    $expr.textContent=''; updateDisplay();
+  }
+  function toggleSign() {
+    if (cur==='0') return;
+    cur = cur.startsWith('-') ? cur.slice(1) : '-'+cur;
+    updateDisplay();
+  }
+  function percent() {
+    cur = String(parseFloat(cur)/100); updateDisplay();
+  }
+  function setOp(o) {
+    if (op && !justCalc) evalNow();
+    prev=cur; op=o; justCalc=true;
+    const sym={'+':'+','-':'−','*':'×','/':'÷'};
+    $expr.textContent = format(prev)+' '+sym[o];
+    updateDisplay();
+  }
+  function evalNow() {
+    const a=parseFloat(prev), b=parseFloat(cur);
+    if (op==='+') return a+b;
+    if (op==='-') return a-b;
+    if (op==='*') return a*b;
+    if (op==='/') return b===0?'Error':a/b;
+  }
+  function calc() {
+    if (!op||!prev) return;
+    const sym={'+':'+','-':'−','*':'×','/':'÷'};
+    const exprStr=format(prev)+' '+sym[op]+' '+format(cur);
+    const res=evalNow();
+    const resStr=res==='Error'?'Error':String(+res.toFixed(10));
+    addHistory(exprStr, res==='Error'?'Error':format(resStr));
+    $expr.textContent=exprStr+' =';
+    cur=resStr; prev=''; op=null; justCalc=true;
+    updateDisplay();
+  }
+  function addHistory(expr, result) {
+    history.unshift({expr,result});
+    if (history.length>5) history.pop();
+    renderHistory();
+  }
+  function renderHistory() {
+    if (!history.length) { $hist.innerHTML='<div class="history-empty">히스토리가 없습니다</div>'; return; }
+    $hist.innerHTML = history.map((h,i)=>
+      `<div class="history-item" onclick="loadHistory(${i})">
+        <span class="history-expr">${h.expr}</span>
+        <span class="history-result">${h.result}</span>
+      </div>`).join('');
+  }
+  function loadHistory(i) {
+    cur=history[i].result.replace(/,/g,'');
+    justCalc=false; op=null; prev=''; $expr.textContent=''; updateDisplay();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key>='0'&&e.key<='9') inp(e.key);
+    else if (e.key==='.') dot();
+    else if (e.key==='Backspace') del();
+    else if (e.key==='Escape') ac();
+    else if (e.key==='Enter'||e.key==='=') calc();
+    else if (['+','-','*','/'].includes(e.key)) setOp(e.key);
+    else if (e.key==='%') percent();
+  });
+  updateDisplay();
+</script>
+</body>
+</html>
