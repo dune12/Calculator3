@@ -144,7 +144,13 @@
 
   // 계산기 로직
   let cur = '0', prev = '', op = null, justCalc = false;
-  const history = [];
+
+  // localStorage에서 기록 불러오기
+  let history = [];
+  try {
+    const saved = localStorage.getItem('calcHistory');
+    if (saved) history = JSON.parse(saved);
+  } catch(e) { history = []; }
   const $num = document.getElementById('mainNum');
   const $expr = document.getElementById('expr');
   const $hist = document.getElementById('history');
@@ -172,6 +178,7 @@
     else cur = cur === '0' ? d : cur + d;
     if (cur.replace('-','').replace('.','').length > 15) cur = cur.slice(0,-1);
     updateDisplay();
+  renderHistory(); // 저장된 기록 즉시 표시
   }
   function dot() {
     if (justCalc) { cur = '0.'; justCalc = false; updateDisplay(); return; }
@@ -223,6 +230,7 @@
   function addHistory(expr, result) {
     history.unshift({expr,result});
     if (history.length>5) history.pop();
+    try { localStorage.setItem('calcHistory', JSON.stringify(history)); } catch(e) {}
     renderHistory();
   }
   function renderHistory() {
