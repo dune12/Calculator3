@@ -1,4 +1,4 @@
-const CACHE = 'calculator-v2';
+const CACHE = 'calculator-v3';
 const FILES = [
   '/Calculator3/',
   '/Calculator3/index.html',
